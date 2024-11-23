@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Light Control App Design 1</title>
+  <style>
+
+    body, html {
+      display: flex;
+      justify-content: center; /* Centers the content (Horizontally) */
+      align-items: center; /* Centers the content (Vertically) */
+      height: 100vh; /* Adjusting to viewport */
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    /* Below is the actual container for the phone */
+    #app {
+      width: 360px;
+      height: 640px;
+      border: 2px solid #333;
+      border-radius: 20px;
+      background-color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    
+    /* Formatting for headers, which in this case is app page title */
+    .header {
+      font-size: 24px;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    /* Prevents all pages from appearing at same time */
+    .page {
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+    }
+    
+    .page.active {
+      display: flex;
+    }
+    
+    .button-container {
+      display: flex;
+      /* Two elements below are to add spacing on the homepage */
+      gap: 10px;
+      margin-top: 50px; 
+    }
+    
+    /* Button formatting for home buttons */
+    button {
+      padding: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 10px;
+      width: 120px; 
+      height: 100px;
+    }
+    
+    /* Button formatting for back button */
+    .back-button {
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      background-color: #ff5722;
+      padding: 10px 20px; 
+      width: auto;
+      height: auto;
+      border-radius: 5px; 
+    }
+
+    /* Color Preview box */
+    .color-preview {
+      width: 100px;
+      height: 100px;
+      margin-top: 20px;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+
+    .page2-content, .page3-content {
+    /* This is here to adjust the contents of page 2 and 3 so they are positioned correctly */
+      margin-top: 50px; 
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <!-- Header -->
+    <div class="header" id="headerTitle">Home</div>
+    
+    <!-- Page 1: Home -->
+    <div id="page1" class="page active">
+      <div class="button-container">
+        <button onclick="navigate('page2', 'Lights')">Lights</button>
+        <button onclick="navigate('page3', 'Colors')">Color</button>
+      </div>
+    </div>
+
+    <!-- Page 2: Lights Control -->
+    <div id="page2" class="page">
+      <button class="back-button" onclick="navigate('page1', 'Home')">Back to Home</button>
+      <div class="page2-content">
+
+        <p>ON</p>
+        <select id="lightsOn" onchange="toggleLight('on')">
+          <option value="" selected>Select Light</option>
+          <option value="1">Light 1</option>
+          <option value="2">Light 2</option>
+          <option value="3">Light 3</option>
+        </select>
+
+        <p>OFF</p>
+        <select id="lightsOff" onchange="toggleLight('off')">
+          <option value="" selected>Select Light</option>
+          <option value="1">Light 1</option>
+          <option value="2">Light 2</option>
+          <option value="3">Light 3</option>
+        </select>
+        
+      </div>
+    </div>
+
+    <!-- Page 3: Color Control -->
+    <div id="page3" class="page">
+      <button class="back-button" onclick="navigate('page1', 'Home')">Back to Home</button>
+      <div class="page3-content">
+        <p>Select Light</p>
+
+        <select id="colorLightSelect" onchange="updateColorPreview()">
+          <option value="1">Light 1</option>
+          <option value="2">Light 2</option>
+          <option value="3">Light 3</option>
+        </select>
+
+        <p>Red</p>
+        <input type="range" id="redSlider" min="0" max="255" oninput="setLightColor()">
+
+        <p>Green</p>
+        <input type="range" id="greenSlider" min="0" max="255" oninput="setLightColor()">
+
+        <p>Blue</p>
+        <input type="range" id="blueSlider" min="0" max="255" oninput="setLightColor()">
+
+        <!-- We are invoking colorPreview, which will updated in JavaScript-->
+        <div class="color-preview" id="colorPreview"></div> 
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Status For each light (On/Off and color) */
+    const lights = {
+      1: { status: 'off', color: { r: 0, g: 0, b: 0 } },
+      2: { status: 'off', color: { r: 0, g: 0, b: 0 } },
+      3: { status: 'off', color: { r: 0, g: 0, b: 0 } },
+    };
+
+    /* This is what unhides a .page when the user clicks into one */
+    function navigate(pageId, title) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active'); // Removes active page when switching to another page
+      });
+      document.getElementById(pageId).classList.add('active'); // This updates the page
+      document.getElementById('headerTitle').innerText = title; // This updates the title
+    }
+
+    /* Toggling Lights on and off */
+    function toggleLight(state) {
+      const selectedLight = document.getElementById(state === 'on' ? 'lightsOn' : 'lightsOff').value;
+      if (selectedLight) {
+        lights[selectedLight].status = state;
+        alert(`Light ${selectedLight} is now ${state}`); // Prints current state of light
+      }
+    }
+
+    /* Connecting values of sliders to RGB values */
+    function setLightColor() {
+      const lightId = document.getElementById('colorLightSelect').value;
+
+      const r = document.getElementById('redSlider').value;
+      const g = document.getElementById('greenSlider').value;
+      const b = document.getElementById('blueSlider').value;
+
+      lights[lightId].color = { r, g, b };
+      updateColorPreview();
+    }
+
+    /* Updating Color preview based on RGB */
+    function updateColorPreview() {
+      const lightId = document.getElementById('colorLightSelect').value;
+      const { r, g, b } = lights[lightId].color;
+
+      document.getElementById('redSlider').value = r;
+      document.getElementById('greenSlider').value = g;
+      document.getElementById('blueSlider').value = b;
+
+      const colorPreview = document.getElementById('colorPreview');
+      colorPreview.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+    }
+  </script>
+</body>
+</html>
